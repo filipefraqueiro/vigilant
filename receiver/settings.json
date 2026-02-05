@@ -1,7 +1,7 @@
 {
     "host": "127.0.0.1",
     "port": 4444,
-    "ssl_certificate": "",
-    "ssl_certificate_key": "",
+    "ssl_certificate": "cert.pem",
+    "ssl_certificate_key": "cert.key",
     "max_connections_allowed": 100
 }

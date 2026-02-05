@@ -24,7 +24,7 @@ def connection(request):
         connection = models.connection.objects.get(id=connection_id)
         data = {
             "fields": connection.fields.strip().split(","),
-            "entries": list(models.log_entry.objects.filter(connection=connection).values_list("content", flat=True))
+            "entries": list(models.log_entry.objects.filter(connection=connection).order_by("-created").values_list("content", flat=True))
         }
 
     except Exception as ex:

@@ -38,17 +38,35 @@ class log_entry(models.Model):
     modified = models.DateTimeField(null=False, auto_now=True)
     content = models.JSONField(null=False, blank=False, help_text="Received Data")
     connection = models.ForeignKey("connection", null=True, blank=True, on_delete=models.DO_NOTHING)
+    trigger = models.ForeignKey("trigger", null=True, blank=True, on_delete=models.DO_NOTHING)
 
 
     def parse_regex(self):
+        # print("parse_regex")
         # print(self.connection.regex_parser)
         matches = re.match(self.connection.regex_parser, self.content).groupdict()
         self.content = matches
+    
+    
+    def check_triggers(self):
+        # print("check_triggers")
+        triggers = trigger.objects.filter(connection=self.connection)
+        for t in triggers:
+            value = self.content.get(t.field)
+            if t.operation == "lt" and value < t.value:
+                    self.trigger = t
+
+            elif t.operation == "eq" and value == t.value:
+                    self.trigger = t
+
+            elif t.operation == "gt" and value > t.value:
+                    self.trigger = t
 
 
     def save(self, *args, **kwargs):       
         # if key and self.validate_connection(key):
         self.parse_regex()
+        self.check_triggers()
 
         super(log_entry, self).save(*args, **kwargs)
 
@@ -61,11 +79,19 @@ class log_entry(models.Model):
 #
 #
 class trigger(models.Model):
+    OPERATIONS = {
+        "lt": "lt",
+        "eq": "eq",
+        "gt": "gt",
+    }
     created = models.DateTimeField(null=False, editable=False, auto_now_add=True)
     modified = models.DateTimeField(null=False, auto_now=True)
     connection = models.ForeignKey("connection", null=True, blank=True, on_delete=models.DO_NOTHING)
-    
-    
+    field = models.CharField(null=True, blank=False, choices=None)
+    operation = models.CharField(null=True, blank=False, choices=OPERATIONS)
+    value = models.CharField(null=True, blank=False)
+
+
     class Meta:
         app_label = "vigilant"
         verbose_name = "Trigger"

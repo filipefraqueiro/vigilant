@@ -3,7 +3,6 @@
         "host": "",
         "port": 4444,
         "ssl_certificate": "",
-        "ssl_certificate_key": "",
         "key": "",
         "filename": ""
     }
