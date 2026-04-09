@@ -1,8 +1,11 @@
 from django.db import models
+from django.utils.timezone import now
+
 import random
 import string
 import secrets
 import re
+import uuid
 #
 #
 #
@@ -18,8 +21,8 @@ class connection(models.Model):
     modified = models.DateTimeField(null=False, auto_now=True)
     name = models.CharField(max_length=255, blank=False, null=True)
     regex_parser = models.TextField(null=False, blank=False, help_text="Received Data Regex Parser")
-    key = models.CharField(max_length=255, blank=True, null=True, default=random_key())
-    fields = models.TextField(null=False, blank=True, help_text="Fields")
+    key = models.CharField(max_length=255, blank=True, null=True, default=random_key)
+    fields = models.TextField(null=False, blank=True, help_text="Fields, comma separated")
 
 
     def __str__(self):
@@ -27,7 +30,7 @@ class connection(models.Model):
 
 
     class Meta:
-        app_label = "vigilant"
+        app_label = "vigilant_main"
         verbose_name = "connection"
         verbose_name_plural = "connections"
 #
@@ -44,8 +47,12 @@ class log_entry(models.Model):
     def parse_regex(self):
         # print("parse_regex")
         # print(self.connection.regex_parser)
-        matches = re.match(self.connection.regex_parser, self.content).groupdict()
-        self.content = matches
+        try:
+            matches = re.match(self.connection.regex_parser, self.content).groupdict()
+            self.content = matches
+        
+        except Exception as ex:
+            print(ex)
     
     
     def check_triggers(self):
@@ -53,14 +60,17 @@ class log_entry(models.Model):
         triggers = trigger.objects.filter(connection=self.connection)
         for t in triggers:
             value = self.content.get(t.field)
-            if t.operation == "lt" and value < t.value:
-                    self.trigger = t
+            if value and t.operation == "lt" and value < t.value:
+                self.trigger = t
 
-            elif t.operation == "eq" and value == t.value:
-                    self.trigger = t
+            elif value and t.operation == "eq" and value == t.value:
+                self.trigger = t
 
-            elif t.operation == "gt" and value > t.value:
-                    self.trigger = t
+            elif value and t.operation == "gt" and value > t.value:
+                self.trigger = t
+            
+            elif value and t.operation == "ne" and value is not t.value:
+                self.trigger = t
 
 
     def save(self, *args, **kwargs):       
@@ -72,7 +82,7 @@ class log_entry(models.Model):
 
     
     class Meta:
-        app_label = "vigilant"
+        app_label = "vigilant_main"
         verbose_name = "Log Entry"
         verbose_name_plural = "Log Entries"
 #
@@ -83,16 +93,24 @@ class trigger(models.Model):
         "lt": "lt",
         "eq": "eq",
         "gt": "gt",
+        "ne": "ne",
     }
     created = models.DateTimeField(null=False, editable=False, auto_now_add=True)
     modified = models.DateTimeField(null=False, auto_now=True)
     connection = models.ForeignKey("connection", null=True, blank=True, on_delete=models.DO_NOTHING)
-    field = models.CharField(null=True, blank=False, choices=None)
-    operation = models.CharField(null=True, blank=False, choices=OPERATIONS)
-    value = models.CharField(null=True, blank=False)
+    field = models.CharField(max_length=255, null=True, blank=False, choices=None)
+    operation = models.CharField(max_length=255, null=True, blank=False, choices=OPERATIONS)
+    value = models.CharField(max_length=255, null=True, blank=False)
 
 
     class Meta:
-        app_label = "vigilant"
+        app_label = "vigilant_main"
         verbose_name = "Trigger"
         verbose_name_plural = "Triggers"
+    
+    
+    def __str__(self):
+        return f"{self.field} {self.operation} {self.value}"
+#
+#
+#

@@ -4,6 +4,7 @@ import os
 import time
 import json
 import threading
+from pathlib import Path
 #
 #
 #
@@ -31,53 +32,61 @@ def is_socket_closed(sock: socket.socket) -> bool:
 #
 def start_connection(connection:str):
     # print(connection)
-    host = connection.get("host")
-    port = connection.get("port")
+    host = connection.get("host", None)
+    port = connection.get("port", None)
     ssl_certificate = connection.get("ssl_certificate")
-    key = connection.get("key")
-    filename = connection.get("filename")
+    key = connection.get("key", None)
+    filename = connection.get("filename", None)
 
-    if not host and not port and not filename and not ssl_certificate:
+    if not host or not port or not filename or not key or not ssl_certificate:
+        print("Validate connection options")
         return
 
     if not os.path.isfile(filename):
         raise FileNotFoundError(filename)
 
     # Create SSL context
-    context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+    context = ssl.create_default_context()
     context.load_verify_locations(cafile=ssl_certificate)
+    context.verify_mode = ssl.CERT_REQUIRED
 
     # Create TCP socket
     with socket.create_connection((host, port)) as sock:
         print(sock)
         # Wrap socket with TLS
-        # with context.wrap_socket(sock, server_hostname=host) as tls_sock:
-        with open(filename, "r", encoding="utf-8", errors="replace") as fp:
-            # Start at end of file (like tail -f)
-            fp.seek(0, os.SEEK_END)
+        with context.wrap_socket(sock, server_hostname=host) as tls_sock:
+            with open(filename, "r", encoding="utf-8", errors="replace") as fp:
+                # Start at end of file (like tail -f)
+                fp.seek(0, os.SEEK_END)
 
-            while True:
-                line = fp.readline()
-                if line:
-                    # tls_sock.sendall(line.encode("utf-8"))
-                    data = {
-                        "key": key,
-                        "entry": line
-                    }
-                    data = json.dumps(data)
-                    sock.sendall(bytes(data, encoding="utf-8") + b"__EOL__")
-                else:
-                    # print(is_socket_closed(sock))
-                    time.sleep(POLL_INTERVAL)
+                while True:
+                    line = fp.readline()
+                    if line:
+                        data = {
+                            "key": key,
+                            "entry": line
+                        }
+                        data = json.dumps(data)
+                        
+                        tls_sock.sendall(bytes(data, encoding="utf-8") + b"__EOL__")
+                        # sock.sendall(bytes(data, encoding="utf-8") + b"__EOL__")
+                    else:
+                        # print(is_socket_closed(sock))
+                        time.sleep(POLL_INTERVAL)
 
-        # Optional EOF marker
-        # tls_sock.sendall(b"__EOF__")
-        sock.sendall(b"__EOF__")
+            # Optional EOF marker
+            tls_sock.sendall(b"__EOF__")
+            # sock.sendall(b"__EOF__")
 #
 #
 #
 if __name__ == "__main__":
-    filename = "connections.json"
+    print('Starting up ...')
+    time.sleep(3)
+
+    module_path = Path(__file__).resolve()  # Ensures absolute path
+    module_dir = module_path.parent
+    filename = f"{module_dir}/connections.json"
     if not os.path.isfile(filename):
         raise FileNotFoundError(filename)
 

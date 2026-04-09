@@ -39,8 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "main",
-    "vigilant",
+    "vigilant_main",
 ]
 
 MIDDLEWARE = [
@@ -58,7 +57,7 @@ ROOT_URLCONF = 'vigilant.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "vigilant/templates"],
+        'DIRS': [BASE_DIR / "main/templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

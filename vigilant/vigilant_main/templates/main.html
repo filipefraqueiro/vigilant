@@ -90,17 +90,13 @@
             data["entries"].forEach(row => {
                 const tr = document.createElement("tr");
 
-                for (const [key, value] of Object.entries(row)) {
+                // console.log(row);
+
+                data["fields"].forEach(col => {
                     const td = document.createElement("td");
-
-                    // Render objects as JSON
-                    td.textContent =
-                        typeof value === "object" && value !== null
-                            ? JSON.stringify(value)
-                            : value ?? "";
-
+                    td.textContent = row[col];
                     tr.appendChild(td);
-                };
+                });
 
                 tbody.appendChild(tr);
             });

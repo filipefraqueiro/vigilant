@@ -1,6 +1,7 @@
 migrations/
-cert.key
-cert.pem
+certs/
+connections.json
+settings.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

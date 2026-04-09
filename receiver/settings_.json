@@ -1,4 +1,7 @@
 {
+    "django_path": "/opt/vigilant/vigilant",
+    "django_project_name": "vigilant",
+    "django_app_name": "vigilant_main",
     "host": "127.0.0.1",
     "port": 4444,
     "ssl_certificate": "cert.pem",

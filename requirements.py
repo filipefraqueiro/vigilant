@@ -1,0 +1,4 @@
+dotenv
+Django
+requests
+mysqlclient
