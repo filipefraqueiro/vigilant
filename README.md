@@ -6,6 +6,8 @@ Log analysis tool
 # Setup
 
 
+useradd --system --no-create-home --shell /usr/sbin/nologin vigilant
+
 2. python -m venv venv
 venv/bin/activate
 pip -r requirements.txt

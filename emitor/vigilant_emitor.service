@@ -3,10 +3,12 @@
 [Unit]
 # Human readable name of the unit
 Description=Vigilant Emitor
+Requires=vigilant_receiver.service
+After=vigilant_receiver.service
 
 [Service]
 # Command to execute when the service is started
-ExecStart=/bin/bash -c "source /opt/vigilant/venv/bin/activate && python3 /opt/vigilant/emitor/emit.py"
+ExecStart=+/bin/bash -c "source /opt/vigilant/venv/bin/activate && python3 /opt/vigilant/emitor/emit.py"
 
 #WorkingDirectory=/opt/vigilant/emitor
 
@@ -16,13 +18,14 @@ Environment=PYTHONUNBUFFERED=1
 
 # Automatically restart the service if it crashes
 Restart=on-failure
-RestartSec=10
+RestartSec=5
 
 # Our service will notify systemd once it is up and running
 Type=simple
 
 # Use a dedicated user to run our service
-User=filipe
+User=vigilant
+Group=vigilant
 
 [Install]
 # Tell systemd to automatically start this service when the system boots

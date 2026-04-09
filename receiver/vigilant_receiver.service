@@ -6,7 +6,7 @@ Description=Vigilant Receiver
 
 [Service]
 # Command to execute when the service is started
-ExecStart=/bin/bash -c "source /opt/vigilant/venv/bin/activate && python3 /opt/vigilant/receiver/receive.py"
+ExecStart=+/bin/bash -c "source /opt/vigilant/venv/bin/activate && python3 /opt/vigilant/receiver/receive.py"
 
 #WorkingDirectory=/opt/vigilant/receiver
 
@@ -22,7 +22,8 @@ RestartSec=10
 Type=simple
 
 # Use a dedicated user to run our service
-User=filipe
+User=vigilant
+Group=vigilant
 
 [Install]
 # Tell systemd to automatically start this service when the system boots
